@@ -1,0 +1,224 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>말하기 평가</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#EEF5FF;--ink:#1F2D4D;--sub:#5A6A8A;--card:#fff;--line:#D5E2F7;--blue:#3D6CF2;--rec:#E5484D;--sun:#FFC93C}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.65 "Apple SD Gothic Neo","Malgun Gothic",sans-serif}
+main{max-width:720px;margin:0 auto;padding:28px 18px 60px}
+h1,h2,.q{font-family:"Jua","Apple SD Gothic Neo","Malgun Gothic",sans-serif;font-weight:400}
+h1{font-size:30px;margin:0 0 4px}
+.lead{color:var(--sub);margin:0 0 22px}
+.card{background:var(--card);border:2px solid var(--line);border-radius:18px;padding:20px;margin-bottom:16px}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+select,button,textarea{font:inherit;color:inherit}
+select{border:2px solid var(--line);border-radius:10px;padding:6px 10px;background:#fff}
+.q{font-size:26px;line-height:1.4;margin:10px 0 14px}
+.ghost{background:none;border:2px solid var(--line);border-radius:10px;padding:6px 12px;cursor:pointer}
+.mic{display:block;margin:6px auto 10px;width:112px;height:112px;border-radius:50%;border:0;background:var(--blue);color:#fff;font-size:44px;cursor:pointer;box-shadow:0 6px 0 #2A4FC0}
+.mic:active{transform:translateY(3px);box-shadow:0 3px 0 #2A4FC0}
+.mic.on{background:var(--rec);box-shadow:0 6px 0 #B3262B;animation:pulse 1.2s infinite}
+@keyframes pulse{50%{transform:scale(1.05)}}
+@media (prefers-reduced-motion:reduce){.mic.on{animation:none}}
+button:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
+.state{text-align:center;color:var(--sub);min-height:1.6em}
+textarea{width:100%;min-height:96px;border:2px solid var(--line);border-radius:12px;padding:12px;resize:vertical}
+.stats{color:var(--sub);font-size:14px;margin:8px 0 0}
+.go{width:100%;margin-top:12px;padding:14px;border:0;border-radius:12px;background:var(--ink);color:#fff;font-size:18px;cursor:pointer}
+.go:disabled{opacity:.4;cursor:not-allowed}
+table{width:100%;border-collapse:collapse;margin:8px 0}
+th,td{text-align:left;padding:10px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+.score{font-family:"Jua",sans-serif;font-size:20px;white-space:nowrap}
+.total{font-family:"Jua",sans-serif;font-size:22px;margin-top:10px}
+.praise{background:#FFF6D6;border-color:var(--sun)}
+.tip{background:#E6F6EC;border-color:#9AD8B0}
+h2{font-size:21px;margin:0 0 8px}
+.hide{display:none}
+.err{color:#B3262B;margin-top:10px}
+.note{font-size:13px;color:var(--sub)}
+</style>
+</head>
+<body>
+<main>
+<h1>말하기 평가</h1>
+<p class="lead">질문을 읽고, 마이크 버튼을 눌러 편하게 말해 보세요.</p>
+
+<section class="card">
+  <div class="row">
+    <label>학년
+      <select id="grade">
+        <option>1~2학년</option><option selected>3~4학년</option><option>5~6학년</option>
+      </select>
+    </label>
+    <button class="ghost" id="next" type="button">다른 질문 보기</button>
+  </div>
+  <p class="q" id="topic"></p>
+  <button class="mic" id="mic" type="button" aria-label="녹음 시작">🎤</button>
+  <div class="state" id="state" aria-live="polite">버튼을 누르면 녹음이 시작돼요</div>
+</section>
+
+<section class="card">
+  <label for="text"><b>인식된 내용</b> <span class="note">(잘못 인식된 글자는 고칠 수 있어요)</span></label>
+  <textarea id="text" placeholder="여기에 말한 내용이 나타나요"></textarea>
+  <p class="stats" id="stats"></p>
+  <button class="go" id="go" type="button" disabled>평가받기</button>
+  <div class="err" id="err" role="alert"></div>
+</section>
+
+<div id="result" class="hide">
+  <section class="card">
+    <h2>평가 결과</h2>
+    <table><thead><tr><th>영역</th><th>점수</th><th>핵심 요약</th></tr></thead><tbody id="rows"></tbody></table>
+    <div class="total" id="total"></div>
+  </section>
+  <section class="card">
+    <h2>영역별 자세한 분석</h2>
+    <div id="details"></div>
+  </section>
+  <section class="card praise"><h2>칭찬 한마디</h2><div id="praise"></div></section>
+  <section class="card tip"><h2>다음 도전</h2><div id="tip"></div></section>
+</div>
+<p class="note">음성 인식은 Chrome·Edge·Safari에서 가장 잘 동작해요. 음성 인식 과정에서 '어', '음' 같은 말은 빠질 수 있어요.</p>
+</main>
+
+<script>
+const TOPICS=["주말에 뭐 했는지 이야기해 주세요.","가장 좋아하는 음식은 무엇이고, 왜 좋아하나요?","친구와 함께 하고 싶은 놀이를 소개해 주세요.","가 보고 싶은 나라가 있다면 어디이고, 왜 가고 싶나요?","오늘 학교에서 있었던 일을 말해 주세요.","키우고 싶은 동물이 있다면 소개해 주세요."];
+const $=id=>document.getElementById(id);
+const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+let ti=Math.floor(Math.random()*TOPICS.length), rec=null, on=false;
+let startAt=0, firstAt=0, lastAt=0, pauses=[], finalText="";
+
+const countWords=t=>t.trim()?t.trim().split(/\s+/).length:0;
+function setTopic(){$("topic").textContent=TOPICS[ti]}
+setTopic();
+$("next").onclick=()=>{if(on)return;ti=(ti+1)%TOPICS.length;setTopic()};
+
+function refresh(){
+  const t=$("text").value;
+  $("go").disabled=!t.trim();
+  const dur=firstAt?(lastAt-firstAt)/1000:0;
+  $("stats").textContent=t.trim()?`어절 ${countWords(t)}개`+(dur>0?` · 말한 시간 ${dur.toFixed(1)}초`:""):"";
+}
+$("text").addEventListener("input",refresh);
+
+if(!SR){$("state").textContent="이 브라우저는 음성 인식을 지원하지 않아요. 아래 칸에 직접 입력해 주세요.";$("mic").disabled=true}
+
+function start(){
+  rec=new SR();rec.lang="ko-KR";rec.continuous=true;rec.interimResults=true;
+  finalText="";pauses=[];firstAt=0;lastAt=0;startAt=Date.now();
+  $("text").value="";$("result").classList.add("hide");$("err").textContent="";
+  rec.onresult=e=>{
+    const now=Date.now();
+    if(!firstAt)firstAt=now; else if(now-lastAt>2000)pauses.push((now-lastAt)/1000);
+    lastAt=now;
+    let interim="";
+    for(let i=e.resultIndex;i<e.results.length;i++){
+      const r=e.results[i];
+      if(r.isFinal)finalText+=r[0].transcript+" "; else interim+=r[0].transcript;
+    }
+    $("text").value=(finalText+interim).trim();refresh();
+  };
+  rec.onerror=e=>{
+    const m={"not-allowed":"마이크 사용을 허용해 주세요.","no-speech":"목소리가 들리지 않았어요. 다시 해 볼까요?","audio-capture":"마이크를 찾을 수 없어요."};
+    $("state").textContent=m[e.error]||"음성 인식에 문제가 생겼어요.";
+  };
+  rec.onend=()=>{ if(on)stop(true) };
+  rec.start();on=true;
+  $("mic").classList.add("on");$("mic").textContent="⏹";$("mic").setAttribute("aria-label","녹음 끝내기");
+  $("state").textContent="듣고 있어요… 다 말했으면 한 번 더 눌러요";
+}
+function stop(ended){
+  if(!ended&&rec)rec.stop();
+  on=false;
+  $("mic").classList.remove("on");$("mic").textContent="🎤";$("mic").setAttribute("aria-label","녹음 시작");
+  $("state").textContent="녹음이 끝났어요. 내용을 확인하고 평가받기를 눌러요";
+  refresh();
+}
+$("mic").onclick=()=>on?stop(false):start();
+
+const AREAS=[["fluency","유창성"],["accuracy","정확성"],["engagement","적극성"]];
+function add(parent,tag,text,cls){const n=document.createElement(tag);n.textContent=text;if(cls)n.className=cls;parent.appendChild(n);return n}
+
+$("go").onclick=()=>{
+  $("err").textContent="";
+  const text=$("text").value.trim();
+  if(!text){
+    $("err").textContent="먼저 내용을 입력해 주세요.";
+    return;
+  }
+  $("go").disabled=true;$("go").textContent="평가하는 중…";
+
+  const words=countWords(text);
+  const hasReason=/(왜냐하면|이유는|때문에|그래서|좋아서|싫어서|하고 싶어서)/.test(text);
+  const hasExample=/(예를 들면|예를 들어|예시|그리고|또한|특히)/.test(text);
+  const hasEnding=/[.!?。]|요(?:\s|$)|니다(?:\s|$)|다(?:\s|$)/.test(text);
+
+  const score=n=>Math.max(1,Math.min(5,n));
+
+  let fluencyScore=words<=3?1:words<=7?2:words<=14?3:words<=24?4:5;
+  if(firstAt && pauses.length>=4) fluencyScore--;
+
+  let accuracyScore=1;
+  if(words>=6) accuracyScore++;
+  if(hasEnding) accuracyScore++;
+  if(hasReason) accuracyScore++;
+  if(hasExample) accuracyScore++;
+
+  let engagementScore=1;
+  if(words>=8) engagementScore++;
+  if(words>=16) engagementScore++;
+  if(hasReason) engagementScore++;
+  if(hasExample) engagementScore++;
+
+  const d={
+    fluency:{
+      score:score(fluencyScore),
+      summary:words>=15?"여러 어절로 생각을 표현했어요.":"조금 더 길게 이어서 말해 보면 좋아요.",
+      analysis:`인식된 답변은 ${words}어절이에요. 이유나 예를 덧붙여 문장을 이어 말해 보세요.`
+    },
+    accuracy:{
+      score:score(accuracyScore),
+      summary:hasReason?"생각이나 이유를 함께 표현했어요.":"생각한 이유를 덧붙이면 더 분명해져요.",
+      analysis:hasReason
+        ?"이유를 나타내는 표현이 포함되어 있어요. 실제 맞춤법이나 문법 검사가 아닌 답변 구성에 대한 참고 점수예요."
+        :"왜 그렇게 생각하는지 이유를 한 문장 더 덧붙여 보세요. 실제 맞춤법이나 문법 검사가 아닌 참고 점수예요."
+    },
+    engagement:{
+      score:score(engagementScore),
+      summary:hasExample?"예를 들어 자세히 설명했어요.":words>=12?"생각을 비교적 자세히 표현했어요.":"구체적인 이야기를 더해 보면 좋아요.",
+      analysis:hasExample
+        ?"예시나 덧붙이는 표현이 있어 답변을 자세히 전달했어요."
+        :"경험이나 예시를 하나 덧붙이면 답변이 더 생생해질 수 있어요."
+    },
+    praise:`${$("grade").value} 학생답게 생각을 표현하려고 노력했어요. 잘했어요!`,
+    nextStep:"다음에는 왜 그렇게 생각하는지 이유와 구체적인 예를 하나씩 덧붙여 보세요."
+  };
+
+  render(d);
+  $("go").textContent="평가받기";refresh();
+};
+
+function render(d){
+  const rows=$("rows"),det=$("details");rows.innerHTML="";det.innerHTML="";
+  let sum=0;
+  for(const [k,label] of AREAS){
+    const a=d[k];sum+=a.score;
+    const tr=document.createElement("tr");
+    add(tr,"td",label);add(tr,"td",`${a.score} / 5`,"score");add(tr,"td",a.summary);
+    rows.appendChild(tr);
+    const p=add(det,"p","");add(p,"b",label+" 분석: ");p.appendChild(document.createTextNode(a.analysis));
+  }
+  $("total").textContent=`총점: ${sum} / 15점`;
+  $("praise").textContent=d.praise;$("tip").textContent=d.nextStep;
+  $("result").classList.remove("hide");
+  $("result").scrollIntoView({behavior:"smooth"});
+}
+refresh();
+</script>
+</body>
+</html>
