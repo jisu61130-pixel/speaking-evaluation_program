@@ -318,7 +318,7 @@ function render(d){
 }
 refresh();
 </script>
-<!-- ===== 학습 성찰 + 구글 시트 저장 (여기부터 복사) ===== -->
+  <!-- ===== 학습 성찰 + 구글 시트 저장 (여기부터 복사) ===== -->
 <section id="rf-reflection" class="rf-card" aria-label="학습 성찰">
   <h2 class="rf-title">오늘의 학습 성찰</h2>
 
@@ -328,6 +328,18 @@ refresh();
   </label>
 
   <div id="rf-list"></div>
+
+  <div class="rf-diary">
+    <h3 class="rf-diary-title">✏️ 한 줄 성찰 일기</h3>
+    <label class="rf-diary-item">
+      <span class="rf-q-text">1. 오늘 영어로 말하면서 잘했다고 생각하는 점은 무엇인가요?</span>
+      <textarea id="rf-diary1" rows="2" maxlength="300" placeholder="예: 끝까지 영어로 말하려고 노력했어요."></textarea>
+    </label>
+    <label class="rf-diary-item">
+      <span class="rf-q-text">2. 다음에 영어로 말할 때 더 잘하고 싶거나 새롭게 도전하고 싶은 점은 무엇인가요?</span>
+      <textarea id="rf-diary2" rows="2" maxlength="300" placeholder="예: 다음에는 이유도 같이 말해 보고 싶어요."></textarea>
+    </label>
+  </div>
 
   <div class="rf-footer">
     <span id="rf-progress" class="rf-progress">응답 완료 0/3</span>
@@ -364,6 +376,15 @@ refresh();
   .rf-opt .rf-num { font-size: 1.5rem; }
   .rf-opt .rf-label { font-size: .85rem; }
   .rf-opt[aria-pressed="true"] { background: #2f6fed; border-color: #2f6fed; color: #fff; font-weight: 600; }
+  .rf-diary { padding: 20px 0 8px; border-bottom: 1px solid #eee; }
+  .rf-diary-title { font-size: 1.15rem; margin: 0 0 12px; }
+  .rf-diary-item { display: block; margin-bottom: 16px; }
+  .rf-diary-item .rf-q-text { display: block; margin-bottom: 8px; }
+  .rf-diary-item textarea {
+    width: 100%; box-sizing: border-box; padding: 12px 14px; font: inherit; font-size: 1.05rem;
+    border: 1px solid #ccc; border-radius: 12px; resize: vertical;
+  }
+  .rf-diary-item textarea:focus, .rf-student input:focus { outline: 2px solid #2f6fed; border-color: #2f6fed; }
   .rf-footer { display: flex; justify-content: space-between; align-items: center; padding-top: 16px; gap: 12px; flex-wrap: wrap; }
   .rf-progress { color: #666; font-size: 1.05rem; }
   .rf-buttons { display: flex; gap: 8px; }
@@ -445,8 +466,13 @@ refresh();
     msg.className = "rf-msg " + (kind || "");
   }
 
+  var diary1 = document.getElementById("rf-diary1");
+  var diary2 = document.getElementById("rf-diary2");
+
   function resetAll() {
     answers.fill(null);
+    diary1.value = "";
+    diary2.value = "";
     list.querySelectorAll(".rf-opt").forEach(function (o) { o.setAttribute("aria-pressed", "false"); });
     submitBtn.disabled = false;
     confirmNoScore = false;
@@ -521,6 +547,8 @@ refresh();
     if (answers.some(function (a) { return a === null; })) {
       show("성찰 질문 3개에 모두 답해 주세요.", "warn"); return;
     }
+    if (!diary1.value.trim()) { show("한 줄 성찰 일기 1번을 써 주세요.", "warn"); diary1.focus(); return; }
+    if (!diary2.value.trim()) { show("한 줄 성찰 일기 2번을 써 주세요.", "warn"); diary2.focus(); return; }
     if (SHEET_URL.indexOf("https://script.google.com/") !== 0) {
       show("선생님: 코드의 SHEET_URL에 웹 앱 주소를 넣어 주세요.", "warn"); return;
     }
@@ -534,6 +562,8 @@ refresh();
 
     data.student = student;
     data.reflection = answers.slice();
+    data.diary1 = diary1.value.trim();
+    data.diary2 = diary2.value.trim();
     submitBtn.disabled = true;
     show("제출하는 중이에요…");
 
