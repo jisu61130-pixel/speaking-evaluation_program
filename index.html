@@ -220,15 +220,25 @@ function render(d){
 }
 refresh();
 </script>
-<!-- ===== 학습 성찰 (여기부터 복사) ===== -->
+<!-- ===== 학습 성찰 + 구글 시트 저장 (여기부터 복사) ===== -->
 <section id="rf-reflection" class="rf-card" aria-label="학습 성찰">
   <h2 class="rf-title">오늘의 학습 성찰</h2>
+
+  <label class="rf-student">
+    <span>번호 또는 이름</span>
+    <input type="text" id="rf-student" maxlength="30" placeholder="예: 6-2 15번" autocomplete="off">
+  </label>
+
   <div id="rf-list"></div>
+
   <div class="rf-footer">
     <span id="rf-progress" class="rf-progress">응답 완료 0/3</span>
-    <button type="button" id="rf-reset" class="rf-reset">초기화</button>
+    <div class="rf-buttons">
+      <button type="button" id="rf-reset" class="rf-reset">초기화</button>
+      <button type="button" id="rf-submit" class="rf-submit">제출하기</button>
+    </div>
   </div>
-  <p id="rf-done" class="rf-done" hidden>성찰을 모두 마쳤어요. 오늘도 수고했어요! 🌟</p>
+  <p id="rf-msg" class="rf-msg" role="status" aria-live="polite"></p>
 </section>
 
 <style>
@@ -237,7 +247,12 @@ refresh();
     border: 1px solid #e5e5e5; border-radius: 20px; background: #fdfdfd;
     font-family: inherit; box-sizing: border-box;
   }
-  .rf-title { font-size: 1.25rem; margin: 0 0 8px; }
+  .rf-title { font-size: 1.25rem; margin: 0 0 16px; }
+  .rf-student { display: flex; align-items: center; gap: 12px; font-size: 1.05rem; flex-wrap: wrap; }
+  .rf-student input {
+    flex: 1; min-width: 160px; max-width: 280px; padding: 10px 14px; font: inherit;
+    border: 1px solid #ccc; border-radius: 10px;
+  }
   .rf-q { padding: 18px 0; border-bottom: 1px solid #eee; }
   .rf-q-text { font-size: 1.15rem; font-weight: 500; margin: 0 0 14px; }
   .rf-options { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; }
@@ -250,19 +265,20 @@ refresh();
   .rf-opt:hover { background: #eaeaea; }
   .rf-opt .rf-num { font-size: 1.5rem; }
   .rf-opt .rf-label { font-size: .85rem; }
-  .rf-opt[aria-pressed="true"] {
-    background: #2f6fed; border-color: #2f6fed; color: #fff; font-weight: 600;
-  }
-  .rf-footer {
-    display: flex; justify-content: space-between; align-items: center; padding-top: 16px;
-  }
+  .rf-opt[aria-pressed="true"] { background: #2f6fed; border-color: #2f6fed; color: #fff; font-weight: 600; }
+  .rf-footer { display: flex; justify-content: space-between; align-items: center; padding-top: 16px; gap: 12px; flex-wrap: wrap; }
   .rf-progress { color: #666; font-size: 1.05rem; }
-  .rf-reset {
-    padding: 8px 22px; border: 1px solid #ccc; border-radius: 999px;
-    background: #fff; cursor: pointer; font: inherit;
+  .rf-buttons { display: flex; gap: 8px; }
+  .rf-reset, .rf-submit {
+    padding: 8px 22px; border-radius: 999px; cursor: pointer; font: inherit;
   }
+  .rf-reset { border: 1px solid #ccc; background: #fff; }
   .rf-reset:hover { background: #f3f3f3; }
-  .rf-done { margin: 14px 0 0; text-align: center; font-weight: 600; color: #2f6fed; }
+  .rf-submit { border: 1px solid #2f6fed; background: #2f6fed; color: #fff; font-weight: 600; }
+  .rf-submit:disabled { opacity: .5; cursor: default; }
+  .rf-msg { margin: 14px 0 0; text-align: center; font-weight: 600; min-height: 1.4em; }
+  .rf-msg.ok { color: #2f6fed; }
+  .rf-msg.warn { color: #c0392b; }
   @media (max-width: 520px) {
     .rf-options { gap: 6px; }
     .rf-opt { padding: 10px 2px; }
@@ -272,7 +288,10 @@ refresh();
 
 <script>
 (function () {
-  // 질문은 여기서 바꾸면 됩니다.
+  // ▼ 선생님: 구글 Apps Script '웹 앱 URL'을 따옴표 안에 붙여넣으세요.
+  var SHEET_URL = "https://script.google.com/macros/s/AKfycbxPojcf7Flx6nFrfIzSaoxA_VWZ10PV5NkCJk2NtITXft6I5xnjvRFkk1NACa2glIliCA/exec";
+
+  // ▼ 성찰 질문은 여기서 바꾸면 됩니다.
   var RF_QUESTIONS = [
     "나는 오늘 영어로 말하기 위해 적극적으로 노력했나요?",
     "나는 영어로 말할 때 실수를 두려워하지 않고 자신 있게 말했나요?",
@@ -281,14 +300,21 @@ refresh();
   var RF_LABELS = ["전혀 아니에요", "아니에요", "보통이에요", "그래요", "매우 그래요"];
 
   var answers = new Array(RF_QUESTIONS.length).fill(null);
+  var section = document.getElementById("rf-reflection");
   var list = document.getElementById("rf-list");
   var progress = document.getElementById("rf-progress");
-  var done = document.getElementById("rf-done");
+  var msg = document.getElementById("rf-msg");
+  var studentInput = document.getElementById("rf-student");
+  var submitBtn = document.getElementById("rf-submit");
+  var confirmNoScore = false;
 
   RF_QUESTIONS.forEach(function (q, qi) {
     var wrap = document.createElement("div");
     wrap.className = "rf-q";
-    wrap.innerHTML = '<p class="rf-q-text">' + (qi + 1) + ". " + q + "</p>";
+    var p = document.createElement("p");
+    p.className = "rf-q-text";
+    p.textContent = (qi + 1) + ". " + q;
+    wrap.appendChild(p);
     var opts = document.createElement("div");
     opts.className = "rf-options";
     opts.setAttribute("role", "group");
@@ -314,18 +340,119 @@ refresh();
   function update() {
     var n = answers.filter(function (a) { return a !== null; }).length;
     progress.textContent = "응답 완료 " + n + "/" + RF_QUESTIONS.length;
-    done.hidden = n !== RF_QUESTIONS.length;
   }
 
-  document.getElementById("rf-reset").addEventListener("click", function () {
+  function show(text, kind) {
+    msg.textContent = text;
+    msg.className = "rf-msg " + (kind || "");
+  }
+
+  function resetAll() {
     answers.fill(null);
     list.querySelectorAll(".rf-opt").forEach(function (o) { o.setAttribute("aria-pressed", "false"); });
+    submitBtn.disabled = false;
+    confirmNoScore = false;
+    show("");
     update();
+  }
+  document.getElementById("rf-reset").addEventListener("click", resetAll);
+
+  // ---- 평가 화면에서 결과를 읽어 오기 (성찰 칸은 제외) ----
+  function pageText() {
+    // 화면에 보이는 글자 (표의 한 줄 = 한 줄). 성찰 칸 글자는 빼고 읽음
+    var all = document.body.innerText || "";
+    var mine = section.innerText || "";
+    return mine ? all.replace(mine, "") : all;
+  }
+
+  function findScore(text, name) {
+    var m = text.match(new RegExp(name + "[^\\n]*?(\\d(?:\\.\\d)?)\\s*/\\s*5(?!\\d)"));
+    return m ? m[1] : "";
+  }
+
+  function collect() {
+    var text = pageText();
+    var data = {
+      fluency: findScore(text, "유창성"),
+      accuracy: findScore(text, "정확성"),
+      engagement: findScore(text, "적극성"),
+      total: "", text: "", grade: "", topic: "", duration: "", words: ""
+    };
+    var t = text.match(/총점[^\d]*(\d{1,2}(?:\.\d)?)\s*\/\s*15/);
+    if (t) data.total = t[1];
+    else if (data.fluency && data.accuracy && data.engagement) {
+      data.total = String(Number(data.fluency) + Number(data.accuracy) + Number(data.engagement));
+    }
+
+    // 발화 텍스트: 성찰 칸 밖에서 가장 긴 입력 칸
+    var best = "";
+    document.querySelectorAll("textarea, input[type=text]").forEach(function (el) {
+      if (section.contains(el)) return;
+      if ((el.value || "").length > best.length) best = el.value;
+    });
+    data.text = best.trim();
+
+    // 학년: '학년'이 들어간 선택 칸
+    document.querySelectorAll("select").forEach(function (sel) {
+      if (section.contains(sel) || data.grade) return;
+      var opt = sel.options[sel.selectedIndex];
+      if (opt && /학년/.test(opt.text)) data.grade = opt.text.trim();
+    });
+    if (!data.grade) {
+      var g = document.querySelector('[aria-pressed="true"], .active, .selected');
+      if (g && !section.contains(g) && /학년/.test(g.textContent)) data.grade = g.textContent.trim();
+    }
+
+    // 질문: id나 class에 topic / question 이 들어간 요소
+    var tEl = Array.prototype.find.call(
+      document.querySelectorAll('[id*="topic" i], [class*="topic" i], [id*="question" i], [class*="question" i]'),
+      function (el) { return !section.contains(el) && el.tagName !== "SELECT" && el.textContent.trim(); }
+    );
+    if (tEl) data.topic = tEl.textContent.trim().replace(/\s+/g, " ").slice(0, 200);
+
+    var d = text.match(/(?:발화|말한)\s*시간[^\d\n]*(\d+(?:\.\d+)?)/);
+    if (d) data.duration = d[1];
+    var w = text.match(/(\d+)\s*어절/) || text.match(/어절[^\d\n]*(\d+)/);
+    if (w) data.words = w[1];
+    return data;
+  }
+
+  submitBtn.addEventListener("click", function () {
+    var student = studentInput.value.trim();
+    if (!student) { show("번호 또는 이름을 적어 주세요.", "warn"); studentInput.focus(); return; }
+    if (answers.some(function (a) { return a === null; })) {
+      show("성찰 질문 3개에 모두 답해 주세요.", "warn"); return;
+    }
+    if (SHEET_URL.indexOf("https://script.google.com/") !== 0) {
+      show("선생님: 코드의 SHEET_URL에 웹 앱 주소를 넣어 주세요.", "warn"); return;
+    }
+
+    var data = collect();
+    if (!data.fluency && !confirmNoScore) {
+      confirmNoScore = true;
+      show("아직 평가 점수가 보이지 않아요. 말하기 평가를 먼저 했나요? 그래도 제출하려면 한 번 더 누르세요.", "warn");
+      return;
+    }
+
+    data.student = student;
+    data.reflection = answers.slice();
+    submitBtn.disabled = true;
+    show("제출하는 중이에요…");
+
+    fetch(SHEET_URL, {
+      method: "POST",
+      mode: "no-cors", // 구글 스크립트로 보낼 때 필요한 설정
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify(data)
+    }).then(function () {
+      show("제출했어요! 오늘도 수고했어요 🌟", "ok");
+    }).catch(function () {
+      submitBtn.disabled = false;
+      show("제출하지 못했어요. 인터넷 연결을 확인하고 다시 눌러 주세요.", "warn");
+    });
   });
 
   update();
 })();
 </script>
-<!-- ===== 학습 성찰 (여기까지 복사) ===== -->
-</body>
-</html>
+<!-- ===== 학습 성찰 + 구글 시트 저장 (여기까지 복사) ===== -->
