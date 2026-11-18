@@ -220,5 +220,112 @@ function render(d){
 }
 refresh();
 </script>
+<!-- ===== 학습 성찰 (여기부터 복사) ===== -->
+<section id="rf-reflection" class="rf-card" aria-label="학습 성찰">
+  <h2 class="rf-title">오늘의 학습 성찰</h2>
+  <div id="rf-list"></div>
+  <div class="rf-footer">
+    <span id="rf-progress" class="rf-progress">응답 완료 0/3</span>
+    <button type="button" id="rf-reset" class="rf-reset">초기화</button>
+  </div>
+  <p id="rf-done" class="rf-done" hidden>성찰을 모두 마쳤어요. 오늘도 수고했어요! 🌟</p>
+</section>
+
+<style>
+  .rf-card {
+    max-width: 960px; margin: 32px auto; padding: 28px 24px 20px;
+    border: 1px solid #e5e5e5; border-radius: 20px; background: #fdfdfd;
+    font-family: inherit; box-sizing: border-box;
+  }
+  .rf-title { font-size: 1.25rem; margin: 0 0 8px; }
+  .rf-q { padding: 18px 0; border-bottom: 1px solid #eee; }
+  .rf-q-text { font-size: 1.15rem; font-weight: 500; margin: 0 0 14px; }
+  .rf-options { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; }
+  .rf-opt {
+    display: flex; flex-direction: column; align-items: center; gap: 6px;
+    padding: 14px 4px; border: 1px solid #e3e3e3; border-radius: 12px;
+    background: #f3f3f3; cursor: pointer; font: inherit; color: #555;
+    transition: background .15s, border-color .15s, color .15s;
+  }
+  .rf-opt:hover { background: #eaeaea; }
+  .rf-opt .rf-num { font-size: 1.5rem; }
+  .rf-opt .rf-label { font-size: .85rem; }
+  .rf-opt[aria-pressed="true"] {
+    background: #2f6fed; border-color: #2f6fed; color: #fff; font-weight: 600;
+  }
+  .rf-footer {
+    display: flex; justify-content: space-between; align-items: center; padding-top: 16px;
+  }
+  .rf-progress { color: #666; font-size: 1.05rem; }
+  .rf-reset {
+    padding: 8px 22px; border: 1px solid #ccc; border-radius: 999px;
+    background: #fff; cursor: pointer; font: inherit;
+  }
+  .rf-reset:hover { background: #f3f3f3; }
+  .rf-done { margin: 14px 0 0; text-align: center; font-weight: 600; color: #2f6fed; }
+  @media (max-width: 520px) {
+    .rf-options { gap: 6px; }
+    .rf-opt { padding: 10px 2px; }
+    .rf-opt .rf-label { font-size: .7rem; }
+  }
+</style>
+
+<script>
+(function () {
+  // 질문은 여기서 바꾸면 됩니다.
+  var RF_QUESTIONS = [
+    "나는 오늘 영어로 말하기 위해 적극적으로 노력했나요?",
+    "나는 영어로 말할 때 실수를 두려워하지 않고 자신 있게 말했나요?",
+    "나는 오늘 연습을 통해 이전보다 영어로 말하는 능력이 나아졌다고 느꼈나요?"
+  ];
+  var RF_LABELS = ["전혀 아니에요", "아니에요", "보통이에요", "그래요", "매우 그래요"];
+
+  var answers = new Array(RF_QUESTIONS.length).fill(null);
+  var list = document.getElementById("rf-list");
+  var progress = document.getElementById("rf-progress");
+  var done = document.getElementById("rf-done");
+
+  RF_QUESTIONS.forEach(function (q, qi) {
+    var wrap = document.createElement("div");
+    wrap.className = "rf-q";
+    wrap.innerHTML = '<p class="rf-q-text">' + (qi + 1) + ". " + q + "</p>";
+    var opts = document.createElement("div");
+    opts.className = "rf-options";
+    opts.setAttribute("role", "group");
+    opts.setAttribute("aria-label", (qi + 1) + "번 질문 응답");
+    RF_LABELS.forEach(function (label, li) {
+      var b = document.createElement("button");
+      b.type = "button";
+      b.className = "rf-opt";
+      b.setAttribute("aria-pressed", "false");
+      b.innerHTML = '<span class="rf-num">' + (li + 1) + '</span><span class="rf-label">' + label + "</span>";
+      b.addEventListener("click", function () {
+        answers[qi] = li + 1;
+        opts.querySelectorAll(".rf-opt").forEach(function (o) { o.setAttribute("aria-pressed", "false"); });
+        b.setAttribute("aria-pressed", "true");
+        update();
+      });
+      opts.appendChild(b);
+    });
+    wrap.appendChild(opts);
+    list.appendChild(wrap);
+  });
+
+  function update() {
+    var n = answers.filter(function (a) { return a !== null; }).length;
+    progress.textContent = "응답 완료 " + n + "/" + RF_QUESTIONS.length;
+    done.hidden = n !== RF_QUESTIONS.length;
+  }
+
+  document.getElementById("rf-reset").addEventListener("click", function () {
+    answers.fill(null);
+    list.querySelectorAll(".rf-opt").forEach(function (o) { o.setAttribute("aria-pressed", "false"); });
+    update();
+  });
+
+  update();
+})();
+</script>
+<!-- ===== 학습 성찰 (여기까지 복사) ===== -->
 </body>
 </html>
