@@ -46,13 +46,13 @@ h2{font-size:21px;margin:0 0 8px}
 <body>
 <main>
 <h1>말하기 평가</h1>
-<p class="lead">질문을 읽고, 마이크 버튼을 눌러 편하게 말해 보세요.</p>
+<p class="lead">질문을 읽고, 마이크 버튼을 눌러 <b>영어로</b> 편하게 말해 보세요.</p>
 
 <section class="card">
   <div class="row">
     <label>학년
       <select id="grade">
-        </option><option selected>3~4학년</option><option>5~6학년</option>
+        <option value="mid" selected>3~4학년</option><option value="high">5~6학년</option>
       </select>
     </label>
     <button class="ghost" id="next" type="button">다른 질문 보기</button>
@@ -83,131 +83,65 @@ h2{font-size:21px;margin:0 0 8px}
   <section class="card praise"><h2>칭찬 한마디</h2><div id="praise"></div></section>
   <section class="card tip"><h2>다음 도전</h2><div id="tip"></div></section>
 </div>
-<p class="note">음성 인식은 Chrome·Edge·Safari에서 가장 잘 동작해요. 음성 인식 과정에서 '어', '음' 같은 말은 빠질 수 있어요.</p>
+<p class="note">음성 인식은 Chrome·Edge·Safari에서 가장 잘 동작해요. 음성 인식 과정에서 'um', 'uh' 같은 말은 빠질 수 있어요.</p>
 </main>
 
 <script>
-const TOPICS=["What country would you like to visit? What would you like to see, eat, and do there?",
-"If a student from another country visited your school, how would you welcome them? What would you do together?",
-"What are three things you love about Korea? Why do you like them?",
-"If you could travel around the world with your family, which countries would you visit and what would you do?",
-"What Korean traditions would you like to introduce to a friend from another country? Why?",
-"What country would you like to learn more about? What are you curious about?",
-"If you could have a friend from any country, where would you want your friend to be from? What would you like to learn from them?",
-"What are some differences between Korea and other countries you know? Which differences are interesting to you?",
-"If you could introduce your hometown to a foreign friend, where would you take them and what would you show them?",
-"What are the most important things in your school bag? How do you use them every day?",
-"If you could design your dream bedroom, what things would you put in it and why?",
-"What things do you need for your favorite hobby? How do you use them?",
-"If you could invent three new things to make school life easier, what would they be and how would they work?",
-"What are five things you would take on a camping trip? Why would you choose them?",
-"What things in your classroom help you learn? Which ones do you use the most?",
-"If you could make a special gift box for your best friend, what would you put inside and why?",
-"What things would you need to plan a perfect birthday party? How would you use them?",
-"If you could choose five things to take to a desert island, what would you take and how would they help you?",
-"What rules do you think are important in your classroom? Why are they important?",
-"If you could make three new rules for your school, what would they be and why?",
-"What can students do to have fun during break time without disturbing others?",
-"If you visited a museum with your friends, what would you want to see? What rules would you follow?",
-"What should people do to keep parks clean and safe? What can you do to help?",
-"If you could change the rules about using phones at school, what would you change and why?",
-"What should students do when they want to borrow something from a friend? Why is asking permission important?",
-"If you were in charge of a school library, what rules would you make and how would you help students enjoy reading?",
-"What are some things you should and should not do when visiting someone else's home? Why?",
-"What is your most precious thing? Who gave it to you, and why is it special?",
-"If you lost your favorite thing, where would you look for it and who would you ask for help?",
-"What would you do if you found a lost bag at school? How would you find its owner?",
-"What things do you like sharing with your friends? What things do you prefer to keep for yourself?",
-"Tell me about a special gift you received. Who gave it to you, and how did you feel?",
-"If your friend accidentally broke something important to you, what would you say and do?",
-"What are some things in your home that belong to different family members? How do you know whose things they are?",
-"If you could give one of your favorite things to someone, what would you give and why?",
-"Have you ever borrowed something from a friend or family member? What was it, and how did you take care of it?",
-"If you had 50,000 won to spend on a shopping trip, what would you buy and why?",
-"What is your favorite place to go shopping? What do you usually buy there, and who do you go with?",
-"If you could open your own store, what would you sell? What would your store look like?",
-"What would you buy for your family members if you went shopping for gifts? Why would you choose those things?",
-"Do you prefer shopping online or visiting stores? What do you like and dislike about each one?",
-"Tell me about something you really wanted to buy. Why did you want it, and did you get it?",
-"If you went shopping with your best friend, where would you go and what would you buy together?",
-"What do you think makes a good shopping experience? Tell me about a time you enjoyed shopping.",
-"What are three things you want to do during your next summer vacation? Why do you want to do them?",
-"If you could plan a summer trip with your family, where would you go and what would you do each day?",
-"What would your perfect summer vacation day look like, from morning to night?",
-"What new things would you like to learn or try this summer? Why are you interested in them?", "If you could spend a week at a summer camp, what activities would you like to do and who would you want to meet?",
-"Would you rather spend your summer vacation at the beach, in the mountains, or in a big city? What would you do there?",
-"If you could invite three friends to spend a summer day together, what activities would you plan?",
-"What goals would you like to achieve during your next summer vacation? How will you achieve them?",
-"What did you do during your last summer vacation? Where did you go, and what was your favorite memory?",
-"Tell me about a festival you visited. What did you see, eat, and do there?",
-"What was the most exciting day you had at school? What happened, and why was it special?",
-"What did you do on your last birthday? Who did you celebrate with, and what did you enjoy the most?",
-"Tell me about a fun weekend you remember. Where did you go, and what did you do?",
-"What was your favorite family trip? What activities did you enjoy, and what made the trip special?",
-"Tell me about a time you tried something new. What did you do, and how did you feel?",
-"What was the funniest thing that happened to you recently? Who was there, and what happened?",
-"What was your favorite school event last year? What did you do, and what would you like to do again?",
-"If you could choose a special dinner for your birthday, what food and drinks would you like? Why?",
-"If you opened your own restaurant, what food would you serve? What would make your restaurant special?",
-"What would you like to order at your favorite restaurant? Who would you like to eat with, and why?",
-"If a friend from another country visited Korea, what Korean foods would you recommend? How would you describe them?",
-"What foods would you choose for a perfect picnic with your friends? What would you prepare?",
-"If you could create a new school lunch menu, what foods would you include and why?",
-"What would you like to cook for your family? What ingredients would you need, and how would you make it?",
-"If you could try foods from three different countries, what would you choose and why?",
-"If you received 30,000 won as a gift, how would you spend or save it? Explain your choices.",
-"What are some things you want to buy that cost a lot of money? Why do you want them, and how could you save for them?",
-"If you went to a store with 20,000 won, what snacks and school supplies would you buy? How would you decide?",
-"Would you rather buy one expensive toy or several cheaper toys? What are the good things about your choice?",
-"If you wanted to buy a birthday gift for your friend with 10,000 won, what would you choose and why?",
-"What do you usually spend your pocket money on? What would you like to change about how you use it?",
-"If you could save money for one year, what would you like to buy or do with it? Why?",
-"If you were planning a class party with 100,000 won, what would you buy and how would you use the money?",
-"What do you usually do from the time you wake up until you go to school? Describe your morning routine.",
-"What is your favorite time of the day? What do you usually do then, and why do you like it?", "What do you usually do after school? Tell me about your afternoon and evening routine.",
-"If you could make your own daily schedule, what time would you wake up, study, play, and go to bed?",
-"How is your weekend schedule different from your school day schedule? Which do you like better?",
-"What do you usually do before going to bed? What helps you sleep well?",
-"If you had two extra hours of free time every day, how would you spend them and why?",
-"What time do you usually do your homework, play games, and exercise? Would you like to change your routine?",
-"What is your favorite school subject? What do you learn in that class, and why do you enjoy it?",
-"If you could create a new school subject, what would it be? What activities would students do?",
-"What is the most difficult subject for you? What makes it difficult, and how do you study it?",
-"What activities do you enjoy most in English class? What new activities would you like to try?",
-"If you were a teacher for one day, what subject would you teach and how would you make the lesson fun?",
-"What is your favorite school project or assignment? What did you do, and what did you learn?",
-"Do you prefer studying alone, with a friend, or in a group? What do you like about your choice?",
-"If you could change your school timetable, which subjects would you add or have more often? Why?",
-"What do you want to be when you grow up? What would you do in that job, and why do you want it?",
-"If you could try three different jobs for one day, what would they be and what would you do?",
-"What job would you like to have if you could help animals? What would you do every day?",
-"Who is someone you admire because of their job? What do they do, and why do you admire them?",
-"If you became a famous singer, athlete, or actor, what would your daily life look like?",
-"What skills do you want to learn for your future dream job? How will you practice them?",
-"If you could invent a completely new job, what would it be? How would it help other people?",
-"Imagine your life when you are 30 years old. Where would you live, what job would you have, and what would you do in your free time?"];
+const TOPICS_BY_GRADE = {
+  mid: [            // 3~4학년 질문
+    "How are you today?",
+    "How old are you?",
+    "What is your favorite thing in your bag?",
+    "What is your favorite thing in your room?",
+    "What do you do when you come into the classroom?",
+    "What animals do you see on a farm?",
+    "What do you need for art class?",
+    "What can you do very well?",
+    "Who is your favorite family member?",
+    "How many people are in your family, and who are they?",
+    "How's the weather today?",
+  ],
+  high: [           // 5~6학년 질문
+    "Where are you from? Where do you live now?",
+    "What do you want to buy? How much is it?",
+    "What will you do this summer? Who will you do it with? Why?",
+    "What did you do last weekend? How was it?",
+    "What time do you get up? What do you do after school?",
+    "What's your favorite subject? What's your favorite activity? Why?",
+    "What do you want to be? What do you like to do?",
+    "Choose a friend or your favorite character. What does he or she look like?",
+    "How do you feel today? What are you going to do today?",
+    "Choose two animals. Which animal is bigger? Which animal is faster?",
+  ],
+};
+
+// 지금 고른 학년의 질문 목록을 돌려주는 함수
+function getTopics() {
+  const grade = document.getElementById("grade").value;  // "grade"는 학년 선택 칸의 id
+  return TOPICS_BY_GRADE[grade] || TOPICS_BY_GRADE.mid;
+}
 const $=id=>document.getElementById(id);
 const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
-let ti=Math.floor(Math.random()*TOPICS.length), rec=null, on=false;
+let ti=Math.floor(Math.random()*getTopics().length), rec=null, on=false;
 let startAt=0, firstAt=0, lastAt=0, pauses=[], finalText="";
 
 const countWords=t=>t.trim()?t.trim().split(/\s+/).length:0;
-function setTopic(){$("topic").textContent=TOPICS[ti]}
+function setTopic(){$("topic").textContent=getTopics()[ti]}
 setTopic();
-$("next").onclick=()=>{if(on)return;ti=(ti+1)%TOPICS.length;setTopic()};
-
+$("next").onclick=()=>{if(on)return;ti=(ti+1)%getTopics().length;setTopic()};
+$("grade").onchange=()=>{if(on)return;ti=Math.floor(Math.random()*getTopics().length);setTopic()};
 function refresh(){
   const t=$("text").value;
   $("go").disabled=!t.trim();
   const dur=firstAt?(lastAt-firstAt)/1000:0;
-  $("stats").textContent=t.trim()?`어절 ${countWords(t)}개`+(dur>0?` · 말한 시간 ${dur.toFixed(1)}초`:""):"";
+  $("stats").textContent=t.trim()?`단어 ${countWords(t)}개`+(dur>0?` · 말한 시간 ${dur.toFixed(1)}초`:""):"";
 }
 $("text").addEventListener("input",refresh);
 
 if(!SR){$("state").textContent="이 브라우저는 음성 인식을 지원하지 않아요. 아래 칸에 직접 입력해 주세요.";$("mic").disabled=true}
 
 function start(){
-  rec=new SR();rec.lang="ko-KR";rec.continuous=true;rec.interimResults=true;
+  rec=new SR();rec.lang="en-US";rec.continuous=true;rec.interimResults=true;
   finalText="";pauses=[];firstAt=0;lastAt=0;startAt=Date.now();
   $("text").value="";$("result").classList.add("hide");$("err").textContent="";
   rec.onresult=e=>{
@@ -252,49 +186,55 @@ $("go").onclick=()=>{
   $("go").disabled=true;$("go").textContent="평가하는 중…";
 
   const words=countWords(text);
-  const hasReason=/(왜냐하면|이유는|때문에|그래서|좋아서|싫어서|하고 싶어서)/.test(text);
-  const hasExample=/(예를 들면|예를 들어|예시|그리고|또한|특히)/.test(text);
-  const hasEnding=/[.!?。]|요(?:\s|$)|니다(?:\s|$)|다(?:\s|$)/.test(text);
+  // 영어 표현 찾기 (대소문자 구분 없음)
+  const hasReason=/\b(because|so|since|that's why|that is why|the reason)\b/i.test(text);
+  const hasExample=/\b(for example|for instance|and|also|too|especially)\b/i.test(text);
+  const hasSentence=/[.!?]/.test(text)||/\b(i|it|my|we|you|he|she|they|there|this)\b/i.test(text)&&words>=3;
 
   const score=n=>Math.max(1,Math.min(5,n));
 
-  let fluencyScore=words<=3?1:words<=7?2:words<=14?3:words<=24?4:5;
+  // 학년별 기준 (영어 단어 수): 3~4학년은 더 너그럽게
+  const G=$("grade").value==="high"
+    ?{flu:[2,5,9,14], acc:6, eng:[7,14]}   // 5~6학년
+    :{flu:[1,3,6,10], acc:4, eng:[5,10]};  // 3~4학년
+
+  let fluencyScore=words<=G.flu[0]?1:words<=G.flu[1]?2:words<=G.flu[2]?3:words<=G.flu[3]?4:5;
   if(firstAt && pauses.length>=4) fluencyScore--;
 
   let accuracyScore=1;
-  if(words>=6) accuracyScore++;
-  if(hasEnding) accuracyScore++;
+  if(words>=G.acc) accuracyScore++;
+  if(hasSentence) accuracyScore++;
   if(hasReason) accuracyScore++;
   if(hasExample) accuracyScore++;
 
   let engagementScore=1;
-  if(words>=8) engagementScore++;
-  if(words>=16) engagementScore++;
+  if(words>=G.eng[0]) engagementScore++;
+  if(words>=G.eng[1]) engagementScore++;
   if(hasReason) engagementScore++;
   if(hasExample) engagementScore++;
 
   const d={
     fluency:{
       score:score(fluencyScore),
-      summary:words>=15?"여러 어절로 생각을 표현했어요.":"조금 더 길게 이어서 말해 보면 좋아요.",
-      analysis:`인식된 답변은 ${words}어절이에요. 이유나 예를 덧붙여 문장을 이어 말해 보세요.`
+      summary:words>G.flu[2]?"여러 단어를 이어서 영어로 말했어요.":"조금 더 길게 이어서 말해 보면 좋아요.",
+      analysis:`인식된 답변은 ${words}단어예요. because(이유)나 for example(예시)을 덧붙여 문장을 이어 말해 보세요.`
     },
     accuracy:{
       score:score(accuracyScore),
-      summary:hasReason?"생각이나 이유를 함께 표현했어요.":"생각한 이유를 덧붙이면 더 분명해져요.",
+      summary:hasReason?"because, so 같은 말로 이유를 함께 표현했어요.":"because로 이유를 덧붙이면 더 분명해져요.",
       analysis:hasReason
-        ?"이유를 나타내는 표현이 포함되어 있어요. 실제 맞춤법이나 문법 검사가 아닌 답변 구성에 대한 참고 점수예요."
-        :"왜 그렇게 생각하는지 이유를 한 문장 더 덧붙여 보세요. 실제 맞춤법이나 문법 검사가 아닌 참고 점수예요."
+        ?"이유를 나타내는 영어 표현이 들어 있어요. 실제 문법 검사가 아닌 답변 구성에 대한 참고 점수예요."
+        :"'I like it because …'처럼 이유를 한 문장 더 덧붙여 보세요. 실제 문법 검사가 아닌 참고 점수예요."
     },
     engagement:{
       score:score(engagementScore),
-      summary:hasExample?"예를 들어 자세히 설명했어요.":words>=12?"생각을 비교적 자세히 표현했어요.":"구체적인 이야기를 더해 보면 좋아요.",
+      summary:hasExample?"and, also 같은 말로 내용을 덧붙였어요.":words>=G.eng[1]?"생각을 비교적 자세히 표현했어요.":"구체적인 이야기를 더해 보면 좋아요.",
       analysis:hasExample
-        ?"예시나 덧붙이는 표현이 있어 답변을 자세히 전달했어요."
-        :"경험이나 예시를 하나 덧붙이면 답변이 더 생생해질 수 있어요."
+        ?"and, also, for example 같은 덧붙이는 표현이 있어 답변을 자세히 전달했어요."
+        :"and나 also로 경험이나 예시를 하나 덧붙이면 답변이 더 생생해질 수 있어요."
     },
-    praise:`${$("grade").value} 학생답게 생각을 표현하려고 노력했어요. 잘했어요!`,
-    nextStep:"다음에는 왜 그렇게 생각하는지 이유와 구체적인 예를 하나씩 덧붙여 보세요."
+    praise:`${$("grade").selectedOptions[0].text} 학생답게 생각을 표현하려고 노력했어요. 잘했어요!`,
+    nextStep:"다음에는 because로 이유를, for example로 예를 하나씩 덧붙여 영어로 말해 보세요."
   };
 
   render(d);
@@ -353,7 +293,7 @@ refresh();
 
 <style>
   .rf-card {
-    max-width: 960px; margin: 32px auto; padding: 28px 24px 20px;
+    max-width: 684px; margin: 0 auto 60px; padding: 28px 24px 20px;
     border: 1px solid #e5e5e5; border-radius: 20px; background: #fdfdfd;
     font-family: inherit; box-sizing: border-box;
   }
@@ -535,7 +475,7 @@ refresh();
 
     var d = text.match(/(?:발화|말한)\s*시간[^\d\n]*(\d+(?:\.\d+)?)/);
     if (d) data.duration = d[1];
-    var w = text.match(/(\d+)\s*어절/) || text.match(/어절[^\d\n]*(\d+)/);
+    var w = text.match(/(\d+)\s*어절/) || text.match(/(?:어절|단어)[^\d\n]*(\d+)/);
     if (w) data.words = w[1];
     return data;
   }
@@ -583,3 +523,5 @@ refresh();
 })();
 </script>
 <!-- ===== 학습 성찰 + 구글 시트 저장 (여기까지 복사) ===== -->
+</body>
+</html>
